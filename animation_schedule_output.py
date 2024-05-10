@@ -23,12 +23,11 @@ class FormattedPromptNode:
 
     @torch.inference_mode()
     def format_text(self, unformatted_prompts, keyframe_interval, offset=0):
+        # Reset the current_keyframe to 0 or to the offset at the start of each call
+        self.current_keyframe = offset
+
         if not unformatted_prompts:
             return ["No input provided."]  # Return a list with a single string
-
-        # Check if offset is provided and update the current keyframe accordingly
-        if offset != 0:
-            self.current_keyframe = offset
 
         # Split the unformatted_prompts into lines
         lines = unformatted_prompts.split("\n")
