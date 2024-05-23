@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-kewky_tools"
+description = "Nodes:TensorDebugPlus, FormattedTextOutput"
+version = "1.0.0"
+license = "LICENSE"
+
+[project.urls]
+Repository = "https://github.com/KewkLW/ComfyUI-kewky_tools"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-kewky_tools"
+Icon = ""
