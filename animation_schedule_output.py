@@ -16,7 +16,7 @@ class FormattedPromptNode:
             }
         }
 
-    CATEGORY = "kewky_tools"
+    CATEGORY = "🧔🏻‍♂️🇰 🇪 🇼 🇰 "
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("formatted_string",)
     FUNCTION = "format_text"
@@ -46,3 +46,11 @@ class FormattedPromptNode:
         print("Debug Final Output:", formatted_output)  # Debugging output to verify
 
         return [formatted_output]  # Return the formatted string wrapped in a list
+
+NODE_CLASS_MAPPINGS = {
+    "FormattedPromptNode": FormattedPromptNode,
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "FormattedPromptNode": "Formatted Text Output",
+}
