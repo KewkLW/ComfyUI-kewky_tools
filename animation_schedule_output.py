@@ -1,7 +1,7 @@
 import torch
 
 class FormattedPromptNode:
-    NODE_NAME = "Formatted Text Output"
+    NODE_NAME = "Animation Schedule Output"
     current_keyframe = 0
 
     @classmethod
@@ -52,5 +52,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "FormattedPromptNode": "Formatted Text Output",
+    "FormattedPromptNode": "Animation Schedule Output",
 }

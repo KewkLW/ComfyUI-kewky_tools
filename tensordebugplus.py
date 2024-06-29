@@ -35,15 +35,15 @@ class TensorDebugPlus:
                     return f"{size_bytes:.2f} {unit}"
                 size_bytes /= 1024.0
 
-        def tensorShape(tensor, name=''):
+        def tensorShape(tensor, tensor_path=''):
             nonlocal total_params, total_memory
 
             if isinstance(tensor, dict):
                 for k, v in tensor.items():
-                    tensorShape(v, f"{name}.{k}" if name else k)
+                    tensorShape(v, f"{tensor_path}.{k}" if tensor_path else k)
             elif isinstance(tensor, list):
                 for i, item in enumerate(tensor):
-                    tensorShape(item, f"{name}[{i}]")
+                    tensorShape(item, f"{tensor_path}[{i}]")
             elif isinstance(tensor, torch.Tensor):
                 shape = tuple(tensor.shape)
                 dtype = str(tensor.dtype)
@@ -58,7 +58,7 @@ class TensorDebugPlus:
                 total_memory += memory_size
 
                 info = {
-                    'name': name,
+                    'tensor_path': tensor_path,
                     'shape': shape,
                     'dtype': dtype,
                     'device': device,
@@ -81,9 +81,9 @@ class TensorDebugPlus:
 
             elif isinstance(tensor, nn.Module):
                 for name, param in tensor.named_parameters():
-                    tensorShape(param, name)
+                    tensorShape(param, f"{tensor_path}.{name}" if tensor_path else name)
                 for name, module in tensor.named_children():
-                    tensorShape(module, name)
+                    tensorShape(module, f"{tensor_path}.{name}" if tensor_path else name)
             elif hasattr(tensor, 'model') and isinstance(tensor.model, nn.Module):
                 tensorShape(tensor.model, 'model')
             else:
@@ -93,16 +93,24 @@ class TensorDebugPlus:
 
         # Generate detailed output
         output = []
+        line_number = 1
+
+        output.append(f"{line_number:4d} Tensor Details:")
+        line_number += 1
+
         for info in shapes:
-            line = f"Name: {info['name']}, Shape: {info['shape']}, Type: {info['dtype']}, Device: {info['device']}"
+            line = f"{line_number:4d} Tensor Path: {info['tensor_path']}, Shape: {info['shape']}, Type: {info['dtype']}, Device: {info['device']}"
             line += f", Requires Grad: {info['requires_grad']}, Params: {info['num_params']}, Memory: {info['memory']}"
             if include_gradients and 'grad_shape' in info:
-                line += f", Grad Shape: {info['grad_shape']}"
+                line += f"\n     Gradient Shape: {info['grad_shape']}"
             if include_statistics:
-                line += f", Min: {info['min']:.4f}, Max: {info['max']:.4f}, Mean: {info['mean']:.4f}, Std: {info['std']:.4f}"
+                line += f"\n     Statistics: Min: {info['min']:.4f}, Max: {info['max']:.4f}, Mean: {info['mean']:.4f}, Std: {info['std']:.4f}"
             output.append(line)
+            line_number += 1
 
         # Add summary
+        output.append(f"\n{line_number:4d} Summary:")
+        line_number += 1
         summary = [
             f"Total shapes: {len(shapes)}",
             f"Unique shapes: {len(shape_counts)}",
@@ -110,11 +118,16 @@ class TensorDebugPlus:
             f"Total memory usage: {format_size(total_memory)}",
             "Shape distribution:"
         ]
+        for item in summary:
+            output.append(f"{line_number:4d} {item}")
+            line_number += 1
+
         for shape, count in shape_counts.items():
-            summary.append(f"  {shape}: {count}")
+            output.append(f"{line_number:4d}   {shape}: {count}")
+            line_number += 1
 
         # Combine output and summary
-        full_output = "\n".join(output + ["\nSummary:"] + summary)
+        full_output = "\n".join(output)
 
         print(f"\033[96m{full_output}\033[0m")  # Console output in cyan
 
