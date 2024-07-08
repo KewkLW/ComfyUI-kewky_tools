@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 import gc
 import psutil
+import shutil
 
 class ImageBatcher:
     @classmethod
@@ -15,7 +16,8 @@ class ImageBatcher:
                 "output_dir": ("STRING", {"default": "batch_output"}),
                 "use_webp": ("BOOLEAN", {"default": False}),
                 "webp_lossless": ("BOOLEAN", {"default": False}),
-                "webp_quality": ("INT", {"default": 80, "min": 1, "max": 100})
+                "webp_quality": ("INT", {"default": 80, "min": 1, "max": 100}),
+                "clear_dir": ("BOOLEAN", {"default": False})
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"}
         }
@@ -30,10 +32,14 @@ class ImageBatcher:
         self.batch_count = "0"
         self.debug_info = ""
 
-    def process_images(self, images, batch_size, output_dir, use_webp, webp_lossless, webp_quality, prompt=None, extra_pnginfo=None):
+    def process_images(self, images, batch_size, output_dir, use_webp, webp_lossless, webp_quality, clear_dir, prompt=None, extra_pnginfo=None):
         self.image_count = "0"
         self.batch_count = "0"
         self.debug_info = ""
+        
+        if clear_dir and os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
+        
         os.makedirs(output_dir, exist_ok=True)
         file_extension = ".webp" if use_webp else ".png"
 

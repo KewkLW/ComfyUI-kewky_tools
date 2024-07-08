@@ -5,41 +5,11 @@ import imghdr
 import numpy as np
 from PIL import Image, ImageOps, ImageSequence
 import torch
-from server import folder_paths  # Ensure this import is correct
-
-# class PreviewImage:
-#     def __init__(self):
-#         self.type = "temp"
-#         self.prefix_append = "_preview_" + ''.join(random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5))
-
-#     RETURN_TYPES = ()
-#     FUNCTION = "preview_images"
-#     OUTPUT_NODE = True
-#     CATEGORY = "image"
-
-#     def preview_images(self, images):
-#         results = list()
-#         for idx in range(images.shape[0]):
-#             image = images[idx]
-#             img_array = 255. * image.cpu().numpy()
-#             img = Image.fromarray(np.clip(img_array, 0, 255).astype(np.uint8))
-            
-#             # Display the image
-#             img.show()
-
-#             filename = f"preview_{idx:05d}{self.prefix_append}.png"
-#             results.append({
-#                 "filename": filename,
-#                 "subfolder": "",
-#                 "type": self.type
-#             })
-
-#         return { "ui": { "images": results } }
+from server import folder_paths 
 
 class LoadImagePlus:
     def __init__(self):
         self.img_extensions = [".png", ".jpg", ".jpeg", ".bmp", ".webp"]
-        # self.preview_image = PreviewImage()
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -54,7 +24,6 @@ class LoadImagePlus:
                 "seed": ("INT", {"default": 0, "min": 0, "max": 100000}),
                 "sort": ("BOOLEAN", {"default": False}),
                 "loop_sequence": ("BOOLEAN", {"default": False}),
-                # "enable_preview": ("BOOLEAN", {"default": True}),
             }
         }
 
@@ -67,11 +36,6 @@ class LoadImagePlus:
             output_image, output_mask = self.load_random_image(random_folder, n_images, seed, sort, loop_sequence)
         else:
             output_image, output_mask = self.load_specific_image(image)
-
-        # if enable_preview:
-        #     preview_result = self.preview_image.preview_images(output_image)
-        #     return (output_image, output_mask, preview_result)
-        # else:
         return (output_image, output_mask)
 
     def load_specific_image(self, image):
@@ -145,7 +109,6 @@ class LoadImagePlus:
             output_images.append(output_images[0])
 
         if len(output_images) > 1:
-            # output_images = self.get_uniformly_sized_crops(output_images, target_n_pixels=1024**2)
             output_images = [torch.from_numpy(output_image)[None,] for output_image in output_images]
             output_image = torch.cat(output_images, dim=0)
         else:
@@ -155,28 +118,6 @@ class LoadImagePlus:
         mask = torch.zeros((output_image.shape[0], 64, 64), dtype=torch.float32, device="cpu")
 
         return (output_image, mask)
-
-    # @staticmethod
-    # def get_uniformly_sized_crops(images, target_n_pixels):
-    #     resized_images = []
-    #     for img in images:
-    #         h, w, _ = img.shape
-    #         aspect_ratio = w / h
-    #         if aspect_ratio > 1:
-    #             new_w, new_h = 512, int(512 / aspect_ratio)
-    #         else:
-    #             new_w, new_h = int(512 * aspect_ratio), 512
-    #         resized = Image.fromarray((img * 255).astype(np.uint8)).resize((new_w, new_h), Image.LANCZOS)
-    #         resized = np.array(resized).astype(np.float32) / 255.0
-            
-    #         # Crop to 512x512
-    #         h, w, _ = resized.shape
-    #         top = (h - 512) // 2
-    #         left = (w - 512) // 2
-    #         cropped = resized[top:top+512, left:left+512, :]
-            
-    #         resized_images.append(cropped)
-    #     return resized_images
 
     @classmethod
     def IS_CHANGED(cls, image, use_random_image, random_folder, n_images, seed, sort, loop_sequence):
@@ -198,6 +139,7 @@ class LoadImagePlus:
             if not os.path.isdir(random_folder):
                 return "Invalid folder path: {}".format(random_folder)
         return True
+
 
 NODE_CLASS_MAPPINGS = {
     "LoadImagePlus": LoadImagePlus

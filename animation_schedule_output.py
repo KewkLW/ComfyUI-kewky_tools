@@ -13,6 +13,8 @@ class FormattedPromptNode:
             },
             "optional": {
                 "offset": ("INT", {"default": 0, "min": 0}),
+                "prepend_text": ("STRING", {"default": "", "multiline": True}),
+                "append_text": ("STRING", {"default": "", "multiline": True}),
             }
         }
 
@@ -22,30 +24,38 @@ class FormattedPromptNode:
     FUNCTION = "format_text"
 
     @torch.inference_mode()
-    def format_text(self, unformatted_prompts, keyframe_interval, offset=0):
-        # Reset the current_keyframe to 0 or to the offset at the start of each call
+    def format_text(self, unformatted_prompts, keyframe_interval, offset=0, prepend_text="", append_text=""):
         self.current_keyframe = offset
 
-        if not unformatted_prompts:
-            return ["No input provided."]  # Return a list with a single string
-
-        # Split the unformatted_prompts into lines
-        lines = unformatted_prompts.split("\n")
+        if not unformatted_prompts and not prepend_text and not append_text:
+            return ["No input provided."]
 
         formatted_prompts = []
-        for line in lines:
-            line = line.strip()
-            if line:  # Skip empty lines
-                formatted_prompt = f'"{self.current_keyframe}" : "{line}"'
-                self.current_keyframe += keyframe_interval
-                formatted_prompts.append(formatted_prompt)
 
-        # Join the formatted prompts with commas, except for the last one
-        formatted_output = ",\n".join(formatted_prompts[:-1]) + ",\n" + formatted_prompts[-1] if formatted_prompts else ""
+        # Process main unformatted prompts
+        if unformatted_prompts:
+            lines = unformatted_prompts.split("\n")
+            for line in lines:
+                line = line.strip()
+                if line:
+                    # Add prepend text to each frame
+                    if prepend_text:
+                        formatted_prompt = f'"{self.current_keyframe}" : "{prepend_text.strip()}, {line}"'
+                    else:
+                        formatted_prompt = f'"{self.current_keyframe}" : "{line}"'
+                    
+                    # Add append text to each frame
+                    if append_text:
+                        formatted_prompt = formatted_prompt[:-1] + f", {append_text.strip()}\""
+                    
+                    self.current_keyframe += keyframe_interval
+                    formatted_prompts.append(formatted_prompt)
+
+        formatted_output = ",\n".join(formatted_prompts) if formatted_prompts else ""
 
         print("Debug Final Output:", formatted_output)  # Debugging output to verify
 
-        return [formatted_output]  # Return the formatted string wrapped in a list
+        return [formatted_output]
 
 NODE_CLASS_MAPPINGS = {
     "FormattedPromptNode": FormattedPromptNode,

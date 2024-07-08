@@ -28,7 +28,7 @@ class CLIPInterrogatorNode:
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "interrogate_image"
-    RETURN_NAMES = ("prompt",)
+    RETURN_NAMES = ("text",)
 
     def load_interrogator(self, clip_model_name):
         if self.interrogator is None or clip_model_name != self.current_model:
@@ -53,28 +53,35 @@ class CLIPInterrogatorNode:
         self.load_interrogator(clip_model_name)
 
         try:
-            # Convert the image to PIL Image using the new method
-            pil_image = self.comfy_tensor_to_pil(image)
-            
-            # Use the interrogator's methods directly
-            if mode == 'best':
-                result = self.interrogator.interrogate(pil_image)
-            elif mode == 'fast':
-                result = self.interrogator.interrogate_fast(pil_image)
-            elif mode == 'classic':
-                result = self.interrogator.interrogate_classic(pil_image)
-            elif mode == 'negative':
-                result = self.interrogator.interrogate_negative(pil_image)
-            else:
-                raise ValueError(f"Unknown mode: {mode}")
+            results = []
+            for i in range(image.shape[0]):  # Iterate over the batch
+                # Convert the image to PIL Image using the new method
+                pil_image = self.comfy_tensor_to_pil(image[i])
+                
+                # Use the interrogator's methods directly
+                if mode == 'best':
+                    result = self.interrogator.interrogate(pil_image)
+                elif mode == 'fast':
+                    result = self.interrogator.interrogate_fast(pil_image)
+                elif mode == 'classic':
+                    result = self.interrogator.interrogate_classic(pil_image)
+                elif mode == 'negative':
+                    result = self.interrogator.interrogate_negative(pil_image)
+                else:
+                    raise ValueError(f"Unknown mode: {mode}")
 
-            if save_text:
-                self.save_text_file("image", result, output_dir, image)
+                results.append(result)
+
+                if save_text:
+                    self.save_text_file(f"image_{i}", result, output_dir, image[i])
 
             if not keep_model_loaded:
                 self.unload_interrogator()
 
-            return (result,)
+            # Join all prompts into a single string, separated by newlines
+            combined_result = "\n".join(results)
+
+            return (combined_result,)
         except Exception as e:
             print(f"Error in CLIP Interrogator: {str(e)}")
             return (f"Error: Unable to generate prompt. {str(e)}",)
@@ -86,12 +93,9 @@ class CLIPInterrogatorNode:
         # Convert to numpy array
         image_np = tensor.numpy()
 
-        # Squeeze out any singleton dimensions
-        image_np = np.squeeze(image_np)
-
         # Ensure the image has 3 dimensions (H, W, C)
-        if image_np.ndim == 2:
-            image_np = np.expand_dims(image_np, axis=-1)
+        if image_np.ndim != 3:
+            raise ValueError(f"Unexpected image shape: {image_np.shape}")
 
         # If the image is grayscale, convert to RGB
         if image_np.shape[-1] == 1:
