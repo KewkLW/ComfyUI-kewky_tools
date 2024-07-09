@@ -51,7 +51,7 @@ class CLIPInterrogatorNode:
 
     RETURN_TYPES = ("STRING", "STRING",)
     FUNCTION = "interrogate_image"
-    RETURN_NAMES = ("pos", "neg",)
+    RETURN_NAMES = ("positive", "negative",)
 
     @classmethod
     def get_clip_models(cls):
