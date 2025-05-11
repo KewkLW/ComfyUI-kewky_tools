@@ -42,8 +42,13 @@ Dumb shit to make life a lil more comfy
 
 	### Example scheduling of Interrogator output
 	![image](https://github.com/KewkLW/ComfyUI-kewky_tools/assets/57611539/27b54da6-6b96-4adc-a601-508e4d3179c5)
-	
-These custom nodes extend the functionality of ComfyUI, providing tools for text manipulation, VRAM management, tensor analysis, and animation scheduling. They can be particularly useful for users working with complex workflows, large models, or animation projects in ComfyUI.
+
+5. open_py_feature.py
+   Adds a context menu item that will open the py file for whatever node you want to review.
+
+
+![image](https://github.com/user-attachments/assets/f57f1b62-4a7d-4d77-b39f-40487521fbd7)
+
 
 ## Getting Started
 
